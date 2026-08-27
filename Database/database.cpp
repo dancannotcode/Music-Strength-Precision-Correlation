@@ -7,23 +7,9 @@
 #include <filesystem>
 
 void Database::saveData(std::string& data) {
-    Table t = parseTable(data);
-
-    if (t == Participant) {
-        ParticipantLine line = ParticipantLine::parse(data);
-        appendToFile(t, line);
-    }
-    else if (t == TrialData) {
-        TrialDataLine line = TrialDataLine::parse(data);
-        appendToFile(t, line);
-    }
-    else if (t == SongTable) {
-        SongTableLine line = SongTableLine::parse(data);
-        appendToFile(t, line);
-    }
-    else {
-        throw std::runtime_error("Invalid table selection in appendToFile");
-    }
+    auto line = parseTable(data);
+    line->parse(data);
+    appendToFile(line);
 }
 
 // thanks again chatgpt
@@ -49,7 +35,14 @@ std::vector<std::string> split(const std::string& line) {
     return parts;
 }
 
+void errorIfNotInit(bool init) {
+    if (!init) {
+        throw std::runtime_error("Trying to generate uninitialized CSVLine outputString\n");
+    }
+}
+
 std::string Database::ParticipantLine::outputString() const {
+    errorIfNotInit(init);
     std::stringstream out;
     out << participantID << ",";
     out << name << ",";
@@ -63,6 +56,7 @@ std::string Database::ParticipantLine::outputString() const {
 }
 
 std::string Database::TrialDataLine::outputString() const {
+    errorIfNotInit(init);
     std::stringstream out;
     out << trialID << ",";
     out << participantID << ",";
@@ -78,6 +72,7 @@ std::string Database::TrialDataLine::outputString() const {
 }
 
 std::string Database::SongTableLine::outputString() const {
+    errorIfNotInit(init);
     std::stringstream out;
     out << songID << ",";
     out << songName << ",";
@@ -85,103 +80,101 @@ std::string Database::SongTableLine::outputString() const {
     return out.str();
 }
 
-Database::ParticipantLine Database::ParticipantLine::parse(std::string& data) {
+void Database::ParticipantLine::parse(std::string& data) {
     auto parts = split(data);
 
-    std::string id = parts[0];
+    participantID = parts[0];
 
-    if (id.length() > 10) {
+    if (participantID.length() > 10) {
         throw std::runtime_error("participant id is too many characters\n");
     }
 
-    std::string name = parts[1];
+    name = parts[1];
 
     if (name.length() > 255) {
         throw std::runtime_error("participant name is too many characters\n");
     }
 
-    int height = std::stoi(parts[2]);
-    int weight = std::stoi(parts[3]);
-
-    std::string gender = parts[4];
+    height = std::stoi(parts[2]);
+    weight = std::stoi(parts[3]);
+     
+    gender = parts[4];
     if (gender.length() > 10) {
         throw std::runtime_error("participant gender is too many characters\n");
     }
 
-    std::string dominantHand = parts[5];    
+    dominantHand = parts[5];    
     if (dominantHand.length() > 10) {
         throw std::runtime_error("participant dominant hand is too many characters\n");
     }
 
-    bool experience = parts[6] == "yes" || parts[6] == "Yes" || parts[6] == "YES" ? true : false;
+    experience = parts[6] == "yes" || parts[6] == "Yes" || parts[6] == "YES" ? true : false;
 
-    std::string notes = parts[7];
+    notes = parts[7];
     if (notes.length() > 50) {
         throw std::runtime_error("participant notes are too many characters\n");
     }
 
-    return ParticipantLine(id, name, height, weight, gender, dominantHand, experience, notes);
+    init = true;
 }
 
-Database::TrialDataLine Database::TrialDataLine::parse(std::string& data) {
+void Database::TrialDataLine::parse(std::string& data) {
     auto parts = split(data);
 
-    std::string trialID = parts[0];
+    trialID = parts[0];
 
     if (trialID.length() > 10) {
         throw std::runtime_error("Trial data id is too many characters\n");
     }
 
-    std::string participantID = parts[1];
+    participantID = parts[1];
 
     if (participantID.length() > 10) {
         throw std::runtime_error("trial data's participant id is too many characters\n");
     }
 
-    int attempt = std::stoi(parts[2]);
-    int bpm = std::stoi(parts[3]);
-    int force = std::stoi(parts[4]);
-    int totalPunches = std::stoi(parts[5]);
-    float accuracy = std::stof(parts[6]);
-    int maxForce = std::stoi(parts[7]);
-    int minForce = std::stoi(parts[8]);
-    int avgForce = std::stoi(parts[9]);
+    attempt = std::stoi(parts[2]);
+    bpm = std::stoi(parts[3]);
+    force = std::stoi(parts[4]);
+    totalPunches = std::stoi(parts[5]);
+    accuracy = std::stof(parts[6]);
+    maxForce = std::stoi(parts[7]);
+    minForce = std::stoi(parts[8]);
+    avgForce = std::stoi(parts[9]);
 
-    return TrialDataLine(trialID, participantID, attempt, bpm, force, totalPunches, accuracy, maxForce, minForce, avgForce);
+    init = true;
 }
 
-Database::SongTableLine Database::SongTableLine::parse(std::string& data) {
+void Database::SongTableLine::parse(std::string& data) {
     auto parts = split(data);
 
-    std::string songID = parts[0];
+    songID = parts[0];
 
-    std::string songName = parts[1];
+    songName = parts[1];
     if (songName.length() > 50) {
         throw std::runtime_error("song name has too many characters\n");
     }
 
-    std::string bpmRange = parts[2];
+    bpmRange = parts[2];
     if (bpmRange.length() > 10) {
         throw std::runtime_error("bpm range has too many characters\n");
     }
 
-    return SongTableLine(songID, songName, bpmRange);
+    init = true;
 }
 
-Database::Table Database::parseTable(std::string& data) {
+std::unique_ptr<Database::CSVLine> Database::parseTable(std::string& data) {
     int nCommas = std::count(data.begin(), data.end(), ',');
     if (nCommas == 7) {
-        return Participant;
+        return std::make_unique<Database::ParticipantLine>();
     }
     if (nCommas == 9) {
-        return TrialData;
+        return std::make_unique<Database::TrialDataLine>();
     }
     if (nCommas == 2) {
-        return SongTable;
+        return std::make_unique<Database::SongTableLine>();
     }
-    std::cout << nCommas << " commas" << std::endl;
     throw std::runtime_error("wrong number of commas in data given to parseTable\n");
-    return Unknown;
 }
 
 void Database::ParticipantLine::writeHeaders(std::ofstream& file) {
@@ -199,37 +192,16 @@ void Database::SongTableLine::writeHeaders(std::ofstream& file) {
     file << "songID" << "," << "songName" << "," << "bpmRange" << std::endl;
 }
 
-void Database::appendToFile(Table t, CSVLine& line) {
+void Database::appendToFile(std::unique_ptr<Database::CSVLine>& line) {
     std::ofstream file;
-    if (t == Participant) {
-        if (!std::filesystem::exists(participantCSVPath)) {
-            file.open(participantCSVPath);
-            Database::ParticipantLine::writeHeaders(file);
-            file.close();
-        }
-        file.open(participantCSVPath, std::ios::app);
-    }
-    else if (t == TrialData) {
-        if (!std::filesystem::exists(trialdataCSVPath)) {
-            file.open(trialdataCSVPath);
-            Database::TrialDataLine::writeHeaders(file);
-            file.close();
-        }
-        file.open(trialdataCSVPath, std::ios::app);
-    }
-    else if (t == SongTable) {
-        if (!std::filesystem::exists(songtableCSVPath)) {
-            file.open(songtableCSVPath);
-            Database::SongTableLine::writeHeaders(file);
-            file.close();
-        }
-        file.open(songtableCSVPath, std::ios::app);
-    }
-    else {
-        throw std::runtime_error("Invalid table selection in appendToFile");
+    if (!std::filesystem::exists(line->filePath)) {
+        file.open(line->filePath);
+        line->writeHeaders(file);
+        file.close();
     }
 
-    file << line.outputString() << "\n";
+    file.open(line->filePath, std::ios::app);
+    file << line->outputString() << "\n";
 }
 
 std::string getLastLine(const std::string path) {
@@ -245,19 +217,27 @@ std::string getLastLine(const std::string path) {
 }
 
 void Database::loadResult() {
+    if (!std::filesystem::exists(participantCSVPath) ||
+        !std::filesystem::exists(trialdataCSVPath) ||
+        !std::filesystem::exists(songtableCSVPath)
+    ) {
+        throw std::runtime_error("loadResult called but a CSV is missing!\n");
+    }
+    
     std::string pLine, tLine, sLine;
-    if (std::filesystem::exists(participantCSVPath)) {
-        pLine = getLastLine(participantCSVPath);
-    }
-    if (std::filesystem::exists(trialdataCSVPath)) {
-        tLine = getLastLine(trialdataCSVPath);
-    }
-    if (std::filesystem::exists(songtableCSVPath)) {
-        sLine = getLastLine(songtableCSVPath);
-    }
-    ParticipantLine participant = ParticipantLine::parse(pLine);
-    TrialDataLine trial = TrialDataLine::parse(tLine);
-    SongTableLine song = SongTableLine::parse(sLine);
+    pLine = getLastLine(participantCSVPath);
+    tLine = getLastLine(trialdataCSVPath);
+    sLine = getLastLine(songtableCSVPath);
+
+    ParticipantLine participant = ParticipantLine();
+    participant.parse(pLine);
+
+    TrialDataLine trial = TrialDataLine();
+    trial.parse(tLine);
+
+    SongTableLine song = SongTableLine();
+    song.parse(sLine);
+
     std::cout << "Participant: " << participant.participantID << " " << participant.name << std::endl; 
     std::cout << "Attempt " << trial.attempt << std::endl;
     std::cout << "Max: " << trial.maxForce <<  ", Avg: " << trial.avgForce <<  ", Acc: " << trial.accuracy << std::endl;

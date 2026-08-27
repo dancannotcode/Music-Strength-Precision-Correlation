@@ -1,13 +1,14 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
+const std::string participantCSVPath = "./participant.csv";
+const std::string trialdataCSVPath = "./trialdata.csv";
+const std::string songtableCSVPath = "./songtable.csv";
 
 class Database {
 private:
-    const std::string participantCSVPath = "./participant.csv";
-    const std::string trialdataCSVPath = "./trialdata.csv";
-    const std::string songtableCSVPath = "./songtable.csv";
 
     enum Table {
         Participant,
@@ -18,7 +19,12 @@ private:
 
     struct CSVLine {
         virtual std::string outputString() const = 0;
+        virtual void parse(std::string& data) = 0;
+        virtual void writeHeaders(std::ofstream& file) = 0;
         virtual ~CSVLine() = default;
+        bool init = false;
+        std::string filePath;
+        CSVLine(std::string path): filePath(path) {}
     };
 
     struct ParticipantLine : public CSVLine {
@@ -32,11 +38,10 @@ private:
         std::string notes;
 
         std::string outputString() const;
-        static void writeHeaders(std::ofstream& file);
-        static ParticipantLine parse(std::string& data);
+        void writeHeaders(std::ofstream& file);
+        void parse(std::string& data);
 
-        ParticipantLine(std::string id, std::string name, int height, int weight, std::string gender, std::string dominantHand, bool exp, std::string notes)
-        : participantID(id), name(name), height(height), weight(weight), gender(gender), dominantHand(dominantHand), experience(exp), notes(notes) {}
+        ParticipantLine() : CSVLine(participantCSVPath) {}
     };
 
     struct TrialDataLine : public CSVLine {
@@ -52,12 +57,10 @@ private:
         int avgForce;
 
         std::string outputString() const;
-        static void writeHeaders(std::ofstream& file);
-        static TrialDataLine parse(std::string& data);
+        void writeHeaders(std::ofstream& file);
+        void parse(std::string& data);
 
-        TrialDataLine(std::string id, std::string pid, int attempt, int bpm, int force, int totalPunches, float accuracy, int maxForce, int minForce, int avgForce)
-        : trialID(id), participantID(pid), attempt(attempt), bpm(bpm), force(force), totalPunches(totalPunches), 
-        accuracy(accuracy), maxForce(maxForce), minForce(minForce), avgForce(avgForce) {}
+        TrialDataLine() : CSVLine(trialdataCSVPath) {}
     };
 
     struct SongTableLine : public CSVLine {
@@ -66,17 +69,16 @@ private:
         std::string bpmRange;
 
         std::string outputString() const;
-        static void writeHeaders(std::ofstream& file);
-        static SongTableLine parse(std::string& data);
+        void writeHeaders(std::ofstream& file);
+        void parse(std::string& data);
 
-        SongTableLine(std::string id, std::string songName, std::string bpmRange)
-        : songID(id), songName(songName), bpmRange(bpmRange) {}
+        SongTableLine() : CSVLine(songtableCSVPath) {}
     };
 
     void createFile(std::string& path);
-    void appendToFile(Table t, CSVLine& line);
+    void appendToFile(std::unique_ptr<CSVLine>& line);
     
-    Table parseTable(std::string& data);
+    std::unique_ptr<CSVLine> parseTable(std::string& data);
 
 public: 
     void saveData(std::string& data);
