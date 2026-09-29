@@ -31,7 +31,7 @@ std::string Music::randomSongFromFolder(int folder) {
     }
 
     if (files.empty()) {
-        throw std::runtime_error("No files found");
+        throw std::runtime_error("No songs found");
     }
 
     static std::random_device rd;
