@@ -5,7 +5,15 @@
   "clangd.arguments": [
     "--background-index",
     "--query-driver=**",
-    "--compile-commands-dir=c:\\Users\\danie\\music-makes-you-better\\Hardware\\build"
+    "--compile-commands-dir=c:\\Users\\danie\\Music-Strength-Precision-Correlation\\Hardware\\build"
   ],
-  "idf.currentSetup": "C:\\esp\\v6.0.2\\esp-idf"
+  "idf.currentSetup": "C:\\esp\\v6.0.2\\esp-idf",
+  "idf.flashType": "UART",
+  "idf.openOcdConfigs": [
+    "board/esp32s3-builtin.cfg"
+  ],
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32s3"
+  },
+  "idf.port": "COM6"
 }
