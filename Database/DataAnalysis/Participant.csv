@@ -1,0 +1,12 @@
+participantID,name,height,weight,gender,dominantHand,experience,notes
+P1,George,72,190,Male,R,5,tested in morning
+P2,Maria,65,145,Female,L,3,
+P3,Jordan,168,175,Unknown,R,4,missing height
+P4,Alex,68,199,Male,R,2,
+P5,Sam,168,185.5,Unknown,L,4,formatting issue
+P6,Chris,70,165,Female,R,4,
+P7,Taylor,64,135,Female,L,1,
+P8,Jamie,69,180,Male,R,6,
+P9,Morgan,67,185.5,Unknown,R,5,
+P10,Casey,161,150,Female,L,2,
+P11,Riley,71,210,Male,R,8,duplicate candidate
