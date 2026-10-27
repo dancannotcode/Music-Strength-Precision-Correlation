@@ -1,4 +1,4 @@
-attempt,SUM of totalPunches,SUM of accuracy,SUM of maxForce,SUM of minForce,SUM of avgForce
-1,132,29.1,798,287,495
-2,142,29.2,813,285,526
-Grand Total,274,58.3,1611,572,1021
+attempt,AVERAGE of totalPunches,AVERAGE of accuracy,AVERAGE of maxForce,AVERAGE of minForce,AVERAGE of avgForce
+1,26.4,5.82,159.6,57.4,99
+2,28.4,5.84,162.6,57,105.2
+Grand Total,27.4,5.83,161.1,57.2,102.1

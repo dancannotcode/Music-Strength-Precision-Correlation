@@ -1,6 +1,6 @@
-bpm,SUM of totalPunches,SUM of accuracy,SUM of maxForce,SUM of minForce,SUM of avgForce
-<60 BPM,46,11,300,108,195
-120+ BPM,71,14.2,375,142,253
-60-120 BPM,105,22.6,631,220,390
-No music,52,10.5,305,102,183
-Grand Total,274,58.3,1611,572,1021
+bpm,AVERAGE of totalPunches,AVERAGE of accuracy,AVERAGE of maxForce,AVERAGE of minForce,AVERAGE of avgForce
+<60 BPM,23,5.5,150,54,97.5
+120+ BPM,35.5,7.1,187.5,71,126.5
+60-120 BPM,26.25,5.65,157.75,55,97.5
+No music,26,5.25,152.5,51,91.5
+Grand Total,27.4,5.83,161.1,57.2,102.1
